@@ -1,101 +1,141 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Chat Here !!! </title>
+  <title>Virtual Assistant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
   <style>
     body {
-      font-family: system-ui, Arial, sans-serif;
-      background: #f3f4f6;
+      font-family: 'Inter', sans-serif;
       margin: 0;
-      padding: 0;
+      background: #eef1f5;
       display: flex;
       justify-content: center;
+      padding: 20px;
     }
+
     .chat-container {
       width: 100%;
       max-width: 480px;
-      height: 100vh;
-      background: white;
+      height: 90vh;
+      background: #ffffff;
       display: flex;
       flex-direction: column;
-      border-left: 1px solid #e5e7eb;
-      border-right: 1px solid #e5e7eb;
+      border-radius: 12px;
+      box-shadow: 0px 4px 18px rgba(0,0,0,0.12);
+      overflow: hidden;
     }
+
     .header {
-      padding: 12px 16px;
-      background: #111827;
-      color: white;
+      background: #0d122b;
+      color: #ffffff;
+      padding: 18px;
+      font-size: 20px;
       font-weight: 600;
       text-align: center;
+      letter-spacing: 0.5px;
     }
+
     .messages {
       flex: 1;
-      padding: 12px;
+      padding: 15px;
       overflow-y: auto;
-      background: #f9fafb;
+      background: #f7f8fa;
     }
+
     .message {
-      margin-bottom: 10px;
-      padding: 8px 10px;
-      border-radius: 8px;
-      max-width: 90%;
-      font-size: 14px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      border-radius: 14px;
+      max-width: 85%;
+      font-size: 15px;
+      line-height: 1.4;
       white-space: pre-wrap;
     }
-    .message.user {
+
+    .user {
       background: #2563eb;
       color: white;
       margin-left: auto;
+      border-bottom-right-radius: 4px;
     }
-    .message.bot {
-      background: #e5e7eb;
+
+    .bot {
+      background: #e8eaf0;
       color: #111827;
       margin-right: auto;
+      border-bottom-left-radius: 4px;
     }
+
     .input-area {
       display: flex;
-      gap: 8px;
-      padding: 10px;
-      border-top: 1px solid #e5e7eb;
-      background: white;
+      gap: 10px;
+      padding: 12px;
+      border-top: 1px solid #e2e5eb;
+      background: #ffffff;
     }
-    .input-area textarea {
+
+    textarea {
       flex: 1;
       resize: none;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      padding: 8px;
-      font-size: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #cfd4dc;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      height: 55px;
     }
-    .input-area button {
-      border: none;
-      border-radius: 8px;
-      padding: 0 14px;
-      font-size: 14px;
-      cursor: pointer;
+
+    textarea:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+    }
+
+    button {
       background: #2563eb;
-      color: white;
+      color: #ffffff;
+      border: none;
+      padding: 0 22px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      transition: 0.2s;
     }
-    .input-area button:disabled {
-      opacity: 0.6;
-      cursor: default;
+
+    button:hover {
+      background: #1e4fbb;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   </style>
 </head>
+
 <body>
+
   <div class="chat-container">
     <div class="header">Virtual Assistant</div>
+
     <div id="messages" class="messages"></div>
+
     <div class="input-area">
-      <textarea id="input" rows="2" placeholder="Escribe tu mensaje..."></textarea>
+      <textarea id="input" placeholder="Type your message here..."></textarea>
       <button id="sendBtn">Send</button>
     </div>
   </div>
 
   <script>
-    // 🔴 CAMBIA ESTA LÍNEA POR TU URL DE N8N:
+    // 🔴 CHANGE THIS TO YOUR REAL N8N WEBHOOK URL:
     const N8N_URL = "https://n8n.srv1126851.hstgr.cloud/webhook/63872b51-0d8c-4ec6-be91-e069fb3b6090/chat";
 
     const messagesDiv = document.getElementById("messages");
@@ -116,7 +156,6 @@
 
       addMessage(text, "user");
       inputEl.value = "";
-      inputEl.focus();
       sendBtn.disabled = true;
 
       try {
@@ -125,21 +164,23 @@
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ message: text }) // ajusta si tu campo es distinto
+
+          // 👇 FIELD expected by your n8n workflow
+          body: JSON.stringify({ chatInput: text })
         });
 
-        const data = await resp.text(); 
+        const data = await resp.text();
         addMessage(data, "bot");
 
       } catch (err) {
-        addMessage("Error de conexión. Intenta de nuevo.", "bot");
-        console.error(err);
-      } finally {
-        sendBtn.disabled = false;
+        addMessage("⚠️ Connection error. Please try again.", "bot");
       }
+
+      sendBtn.disabled = false;
     }
 
     sendBtn.addEventListener("click", sendMessage);
+
     inputEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -147,5 +188,6 @@
       }
     });
   </script>
+
 </body>
 </html>
