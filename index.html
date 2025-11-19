@@ -135,7 +135,9 @@
   </div>
 
   <script>
-    // 🔴 CHANGE THIS TO YOUR REAL N8N WEBHOOK URL:
+    // 🔴 PUT YOUR REAL N8N HOSTED CHAT URL HERE:
+    // Example:
+    // const N8N_URL = "https://n8n.srv1126851.hstgr.cloud/webhook/63872b51-0d8c-4ec6-be91-e069fb3b6090/chat";
     const N8N_URL = "https://n8n.srv1126851.hstgr.cloud/webhook/63872b51-0d8c-4ec6-be91-e069fb3b6090/chat";
 
     const messagesDiv = document.getElementById("messages");
@@ -164,9 +166,11 @@
           headers: {
             "Content-Type": "application/json"
           },
-
-          // 👇 FIELD expected by your n8n workflow
-          body: JSON.stringify({ chatInput: text })
+          // 👇 This is the format Hosted Chat expects
+          body: JSON.stringify({
+            action: "sendMessage",
+            chatInput: text
+          })
         });
 
         const data = await resp.text();
@@ -174,6 +178,7 @@
 
       } catch (err) {
         addMessage("⚠️ Connection error. Please try again.", "bot");
+        console.error(err);
       }
 
       sendBtn.disabled = false;
