@@ -135,14 +135,20 @@
   </div>
 
   <script>
-    // 🔴 PUT YOUR REAL N8N HOSTED CHAT URL HERE:
-    // Example:
-    // const N8N_URL = "https://n8n.srv1126851.hstgr.cloud/webhook/63872b51-0d8c-4ec6-be91-e069fb3b6090/chat";
+    // 🔴 USE YOUR REAL N8N HOSTED CHAT URL HERE:
     const N8N_URL = "https://n8n.srv1126851.hstgr.cloud/webhook/63872b51-0d8c-4ec6-be91-e069fb3b6090/chat";
 
     const messagesDiv = document.getElementById("messages");
     const inputEl = document.getElementById("input");
     const sendBtn = document.getElementById("sendBtn");
+
+    // 👉 Maintain a sessionId so n8n can keep context
+    let sessionId = localStorage.getItem("erickChatSessionId");
+    if (!sessionId) {
+      // simple unique id per browser
+      sessionId = "web-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+      localStorage.setItem("erickChatSessionId", sessionId);
+    }
 
     function addMessage(text, role) {
       const div = document.createElement("div");
@@ -166,8 +172,9 @@
           headers: {
             "Content-Type": "application/json"
           },
-          // 👇 This is the format Hosted Chat expects
+          // 👇 This matches what your Hosted Chat "When" node expects
           body: JSON.stringify({
+            sessionId: sessionId,
             action: "sendMessage",
             chatInput: text
           })
