@@ -56,7 +56,7 @@
       max-width: 85%;
       font-size: 15px;
       line-height: 1.4;
-      white-space: pre-wrap;
+      white-space: pre-wrap; /* respeta saltos de línea */
     }
 
     .user {
@@ -135,17 +135,16 @@
   </div>
 
   <script>
-    // 🔴 USE YOUR REAL N8N HOSTED CHAT URL HERE:
+    // 🔴 YOUR N8N HOSTED CHAT URL:
     const N8N_URL = "https://n8n.srv1126851.hstgr.cloud/webhook/63872b51-0d8c-4ec6-be91-e069fb3b6090/chat";
 
     const messagesDiv = document.getElementById("messages");
     const inputEl = document.getElementById("input");
     const sendBtn = document.getElementById("sendBtn");
 
-    // 👉 Maintain a sessionId so n8n can keep context
+    // 👉 Maintain a sessionId so n8n keeps context per browser
     let sessionId = localStorage.getItem("erickChatSessionId");
     if (!sessionId) {
-      // simple unique id per browser
       sessionId = "web-" + Date.now() + "-" + Math.random().toString(16).slice(2);
       localStorage.setItem("erickChatSessionId", sessionId);
     }
@@ -172,7 +171,6 @@
           headers: {
             "Content-Type": "application/json"
           },
-          // 👇 This matches what your Hosted Chat "When" node expects
           body: JSON.stringify({
             sessionId: sessionId,
             action: "sendMessage",
@@ -180,8 +178,27 @@
           })
         });
 
-        const data = await resp.text();
-        addMessage(data, "bot");
+        const raw = await resp.text();
+        let messageText = raw;
+
+        // 👇 Intentar interpretar como JSON para limpiar { "output": "..." }
+        try {
+          const json = JSON.parse(raw);
+          if (typeof json === "object" && json !== null) {
+            if (json.output) {
+              messageText = json.output;
+            } else if (json.response) {
+              messageText = json.response;
+            } else {
+              // Último recurso: mostrar json bonito
+              messageText = JSON.stringify(json, null, 2);
+            }
+          }
+        } catch (e) {
+          // No era JSON, dejamos el texto tal cual
+        }
+
+        addMessage(messageText, "bot");
 
       } catch (err) {
         addMessage("⚠️ Connection error. Please try again.", "bot");
