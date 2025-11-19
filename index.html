@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chat Here !!! </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 480px;
+      height: 100vh;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #e5e7eb;
+      border-right: 1px solid #e5e7eb;
+    }
+    .header {
+      padding: 12px 16px;
+      background: #111827;
+      color: white;
+      font-weight: 600;
+      text-align: center;
+    }
+    .messages {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      background: #f9fafb;
+    }
+    .message {
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      max-width: 90%;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+    .message.user {
+      background: #2563eb;
+      color: white;
+      margin-left: auto;
+    }
+    .message.bot {
+      background: #e5e7eb;
+      color: #111827;
+      margin-right: auto;
+    }
+    .input-area {
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      border-top: 1px solid #e5e7eb;
+      background: white;
+    }
+    .input-area textarea {
+      flex: 1;
+      resize: none;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      padding: 8px;
+      font-size: 14px;
+    }
+    .input-area button {
+      border: none;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-size: 14px;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+    }
+    .input-area button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="header">Virtual Assistant</div>
+    <div id="messages" class="messages"></div>
+    <div class="input-area">
+      <textarea id="input" rows="2" placeholder="Escribe tu mensaje..."></textarea>
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
+
+  <script>
+    // 🔴 CAMBIA ESTA LÍNEA POR TU URL DE N8N:
+    const N8N_URL = "https://n8n.srv1126851.hstgr.cloud/webhook/63872b51-0d8c-4ec6-be91-e069fb3b6090/chat";
+
+    const messagesDiv = document.getElementById("messages");
+    const inputEl = document.getElementById("input");
+    const sendBtn = document.getElementById("sendBtn");
+
+    function addMessage(text, role) {
+      const div = document.createElement("div");
+      div.className = "message " + role;
+      div.textContent = text;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      addMessage(text, "user");
+      inputEl.value = "";
+      inputEl.focus();
+      sendBtn.disabled = true;
+
+      try {
+        const resp = await fetch(N8N_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message: text }) // ajusta si tu campo es distinto
+        });
+
+        const data = await resp.text(); 
+        addMessage(data, "bot");
+
+      } catch (err) {
+        addMessage("Error de conexión. Intenta de nuevo.", "bot");
+        console.error(err);
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
